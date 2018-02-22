@@ -41,7 +41,7 @@ void displayMenuOptions(void);
 
 
 int main(int argc, const char * argv[]) {
-    DINPtrT list = NULL;
+    DINPtrT list = NULL; 
     int* array = NULL;
     int origSize = 10;
     int newSize = 0;
