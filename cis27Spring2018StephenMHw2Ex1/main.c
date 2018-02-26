@@ -24,13 +24,13 @@ typedef struct DigitInfoNodeStephenM* DINPtrT;
 typedef struct DigitInfoNodeStephenM* DINAddrT;
 
 // function prototypes
-//DINPtrT extractDigitInfoStephenM(int*, int);
-void extractDigitInfoStephenM(int*, int, DINPtrT*); // for testing logic
-//DINPtrT createNewNode(int, int, int, int*, DINPtrT);
+DINAddrT extractDigitInfoStephenM(int*, int/*, DINPtrT* */); // for testing logic
 DINPtrT createNewNode(int, int, int, int*);
-void prependNode(DINAddrT myList, DINPtrT*); // adds node to the beginning of list
-void appendNode(DINAddrT, DINPtrT*); // adds node to end of list
-void printList(DINPtrT list);
+void appendNode(DINPtrT, DINAddrT*); // adds node to end of list
+void printList(DINPtrT);
+DINPtrT buildList(int*);
+DINPtrT populateList(int, int*, DINPtrT);
+void freeList(DINPtrT);
 void sortArray(int*, int);
 int removeDuplicates(int*, int);
 int* countDigits(int*, int);
@@ -44,7 +44,7 @@ int main(int argc, const char * argv[]) {
     DINPtrT list = NULL; 
     int* array = NULL;
     int origSize = 10;
-    int newSize = 0;
+
     
     array = (int*)malloc(origSize * sizeof(int));
     
@@ -60,22 +60,24 @@ int main(int argc, const char * argv[]) {
     *(array + 9) = 7;
     
     
+    list = extractDigitInfoStephenM(array, 10);
     
+    printf("\n outside function\n");
+    printList(list);
+    
+    freeList(list);
+    free(array);
+    array = NULL;
     return 0;
 }
 
-void extractDigitInfoStephenM(int* ary, int size, DINPtrT* list) {
+DINAddrT extractDigitInfoStephenM(int* ary, int size/*, DINPtrT* list */) {
     int* countAry = NULL;
     int* tempPtr = NULL;
-    int* tempNodeIPtr = NULL;
-    int intCount = 0;
+    DINPtrT head = NULL;
     int noDupSize = 0;
-    int temp = 0;
-    int nodePos = 0;
-    int nodePtrSize = 0;
-    int count = 0;
     int i = 0;
-    int j = 0;
+
     
     // safety checks
     if (countAry != NULL)
@@ -83,40 +85,51 @@ void extractDigitInfoStephenM(int* ary, int size, DINPtrT* list) {
     if (tempPtr != NULL)
         free(tempPtr);
     
-    tempPtr = ary; // assign user array to temp variable to not alter original
+    // assign user array to temp variable to not alter original
+    tempPtr = (int*)malloc(size * sizeof(int));
+    for (i = 0; i < size; i++) {
+        *(tempPtr + i) = *(ary + i);
+    }
     
     countAry = countDigits(tempPtr, size); // get digit count of orig array
     
     noDupSize = removeDuplicates(tempPtr, size); // sort and remove duplicates from array
     
-    // begin building linked list
-    // beginning with even digits
-    for (i = 0; i < 10; i += 2) {
-        if (*(countAry + i) > 0) {
-            // creating nodes without node->size or node->iPtr
-            appendNode(createNewNode(i, *(countAry + i), 0, NULL), list);
-            count++;
-        }
+    // for testing purposes
+    for (i = 0; i < 10; i++) {
+        printf("\n %d \n", *(countAry + i));
     }
     
-    // odd digits
-    for (i = 1; i < 10; i += 2) {
-        if (*(countAry + i) > 0) {
-            // creating nodes without node->size or node->iPtr
-            appendNode(createNewNode(i, *(countAry + i), 0, NULL), list);
-            count++;
-        }
-    }
+    head = buildList(countAry);
+    
+    printList(head);
+    
+    head = populateList(noDupSize, tempPtr, head);
+    
+    printf("\n inside function\n");
+    printList(head);
+    
+    return head;
+}
 
+DINPtrT populateList(int size, int* array, DINPtrT head) {
+    DINPtrT list = NULL;
+    int* tempNodeIPtr = NULL;
+    int nodePos = 0;
+    int nodePtrSize = 0;
+    int temp = 0;
+    int i = 0;
+    int j = 0;
+    
+    list = head;
     
     while(list) {
-        nodePos = (*list)->digit;
-        nodePtrSize = (*list)->size;
-        tempNodeIPtr = (*list)->iPtr;
+        nodePos = (list)->digit;
+        nodePtrSize = 0;
         
         
-        for (i = 0; i < noDupSize; i++) {
-            temp = (*(tempPtr + i) < 0) ? -*(tempPtr + i) : *(tempPtr + i);
+        for (i = 0; i < size; i++) {
+            temp = (*(array + i) < 0) ? -*(array + i) : *(array + i);
             do {
                 if (temp % 10 == nodePos) {
                     nodePtrSize++;
@@ -126,17 +139,19 @@ void extractDigitInfoStephenM(int* ary, int size, DINPtrT* list) {
                 }
             } while (temp != 0);
         }
+        (list)->size = nodePtrSize;
         
         tempNodeIPtr = (int*)malloc(nodePtrSize * sizeof(int));
         
+        
         for (i = 0; i < nodePtrSize; i++) {
-            for (j = 0; j < noDupSize; j++) {
-                temp = (*(tempPtr + j) < 0) ? -*(tempPtr + j) : *(tempPtr + j);
+            for (j = 0; j < size; j++) {
+                temp = (*(array + j) < 0) ? -*(array + j) : *(array + j);
                 do {
                     if (temp % 10 == nodePos) {
-                        *(tempNodeIPtr + i) = temp;
+                        *(tempNodeIPtr + i) = *(array + j);
                         temp = 0;
-                        j = noDupSize;
+                        i++;
                     } else {
                         temp /= 10;
                     }
@@ -144,8 +159,56 @@ void extractDigitInfoStephenM(int* ary, int size, DINPtrT* list) {
             }
         }
         
-        list = (*list)->next;
+        (list)->iPtr = tempNodeIPtr;
+        for (i = 0; i < list->size; i++) {
+            printf("\n node#: %d, node ptr value: (%d)", list->digit, *(list->iPtr + i));
+        }
+        free(tempNodeIPtr);
+        tempNodeIPtr = NULL;
+        
+        list = (list)->next;
     }
+    
+    return head;
+}
+
+DINPtrT buildList(int* array) {
+    DINPtrT head = NULL;
+    int listFlag = 0; // becomes 1 after first node is created
+    int i = 0;
+    
+    head = (DINPtrT)malloc(sizeof(DINT));
+    
+
+    
+    // begin building linked list
+    // beginning with even digits
+    for (i = 0; i < 10; i += 2) {
+        if (*(array + i) > 0) {
+            // creating nodes without node->size or node->iPtr
+            if (listFlag == 0) {
+                head = createNewNode(i, *(array + i), 0, NULL);
+                listFlag = 1;
+            } else {
+                appendNode(createNewNode(i, *(array + i), 0, NULL), &head);
+            }
+        }
+    }
+    
+    // odd digits
+    for (i = 1; i < 10; i += 2) {
+        if (*(array + i) > 0) {
+            // creating nodes without node->size or node->iPtr
+            if (listFlag == 0) {
+                head = createNewNode(i, *(array + i), 0, NULL);
+                listFlag = 1;
+            } else {
+                appendNode(createNewNode(i, *(array + i), 0, NULL), &head);
+            }
+        }
+    }
+    
+    return head;
 }
 
 void sortArray(int* ary, int size) {
@@ -183,15 +246,16 @@ int removeDuplicates(int* ary, int size) {
 
 int* countDigits(int* ary, int size) {
     // counts total number of digits from all values in the array
-    int countAry[10] = {0};
+    int* countAry = NULL;
     int temp = 0;
     int i = 0;
     
+    countAry = (int*)malloc(10 * sizeof(int));
     
     for (i = 0; i < size; i++) {
         temp = (*(ary + i) < 0) ? -*(ary + i) : *(ary + i);
         do {
-            countAry[temp % 10]++;
+            *(countAry + (temp % 10)) += 1;
             temp /= 10;
         } while (temp != 0);
     }
@@ -214,7 +278,7 @@ DINPtrT createNewNode(int digit, int count, int size, int* iPtr) {
     
 }
 
-void appendNode(DINAddrT nodeAddr, DINPtrT* listAddr) {
+void appendNode(DINPtrT nodeAddr, DINAddrT* listAddr) {
     DINAddrT tempPtr = NULL;
     
     if (*listAddr != NULL) {
@@ -232,8 +296,11 @@ void appendNode(DINAddrT nodeAddr, DINPtrT* listAddr) {
                             // and nodeAddr will be appended to list
 }
 
-void printList(DINPtrT list) {
+void printList(DINPtrT head) {
     int* tempPtr = NULL;
+    DINPtrT list = NULL;
+    
+    list = head;
     
     while (list) {
         printf("\n digit %d, count %d, size %d", list->digit, list->count, list->size);
@@ -243,5 +310,21 @@ void printList(DINPtrT list) {
         }
         
         list = list->next;
+    }
+}
+
+void freeList(DINPtrT list) {
+    DINPtrT temp = NULL;
+    
+    if (list == NULL) {
+        return;
+    } else {
+        while (list != NULL) {
+            temp = list;
+            list = list->next;
+            //free(temp->iPtr);
+            free(temp);
+            temp = NULL;
+        }
     }
 }
