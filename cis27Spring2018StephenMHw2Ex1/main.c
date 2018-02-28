@@ -272,6 +272,8 @@ void runMenuHw2() {
                        "\n interesting facts are shown below.");
                 printList(userList);
                 
+                freeList(&userList);
+                
                 break;
             case 2: // quit
                 printf("\nQUITTING CAUSE FUN\n");
