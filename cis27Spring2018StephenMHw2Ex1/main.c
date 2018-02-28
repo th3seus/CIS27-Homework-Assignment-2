@@ -150,7 +150,6 @@ DINPtrT buildList(int* array) {
     
     head = (DINPtrT)malloc(sizeof(DINT));
     
-
     // begin building linked list
     // beginning with even digits
     for (i = 0; i < 10; i += 2) {
@@ -221,6 +220,10 @@ int* countDigits(int* ary, int size) {
     int i = 0;
     
     countAry = (int*)malloc(10 * sizeof(int));
+    
+    for (i = 0; i < 10; i++) {
+        *(countAry + i) = 0;
+    }
     
     for (i = 0; i < size; i++) {
         temp = (*(ary + i) < 0) ? -*(ary + i) : *(ary + i);
